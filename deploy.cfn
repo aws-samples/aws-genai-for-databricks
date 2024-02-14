@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Metadata:
+  Generator: "former2"
+Description: ""
+Resources:
+  EC2RouteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref EC2VPC
+      Tags:
+        - Key: "Name"
+          Value: "streamlit-app-rtb-public"
+
+  EC2Route:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref EC2InternetGateway
+      RouteTableId: !Ref EC2RouteTable
+
+  EC2SubnetRouteTableAssociation:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref EC2RouteTable
+      SubnetId: !Ref EC2Subnet2
+
+  EC2SubnetRouteTableAssociation2:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref EC2RouteTable
+      SubnetId: !Ref EC2Subnet
+
+  EC2VPCGatewayAttachment:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref EC2InternetGateway
+      VpcId: !Ref EC2VPC
+
+  EC2VPC:
+    Type: "AWS::EC2::VPC"
+    Properties:
+      CidrBlock: "10.0.0.0/16"
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: "default"
+      Tags:
+        - Key: "Name"
+          Value: "streamlit-app-vpc"
+
+  EC2Subnet:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      CidrBlock: "10.0.0.0/20"
+      VpcId: !Ref EC2VPC
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: "Name"
+          Value: !Sub "streamlit-app-subnet-public1-${AWS::Region}a"
+
+  EC2Subnet2:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone: !Sub "${AWS::Region}b"
+      CidrBlock: "10.0.16.0/20"
+      VpcId: !Ref EC2VPC
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: "Name"
+          Value: !Sub "streamlit-app-subnet-public2-${AWS::Region}b"
+
+  EC2InternetGateway:
+    Type: "AWS::EC2::InternetGateway"
+    Properties:
+      Tags:
+        - Key: "Name"
+          Value: "streamlit-app-igw"
+
+  EC2SecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: "security group for streamlit vpc"
+      GroupName: "stream-app-sg"
+      VpcId: !Ref EC2VPC
+      SecurityGroupIngress:
+        - CidrIp: "0.0.0.0/0"
+          Description: "Allow websocket connections"
+          FromPort: 0
+          IpProtocol: "tcp"
+          ToPort: 65535
+        - CidrIp: "0.0.0.0/0"
+          FromPort: 22
+          IpProtocol: "tcp"
+          ToPort: 22
+      SecurityGroupEgress:
+        - CidrIp: "0.0.0.0/0"
+          IpProtocol: "-1"
+
+  IAMRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      Path: "/"
+      RoleName: "streamlitappRole"
+      AssumeRolePolicyDocument: '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Service":"ec2.amazonaws.com"},"Action":"sts:AssumeRole"}]}'
+      MaxSessionDuration: 3600
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+      Description: "Allows EC2 instances to call AWS services on your behalf."
+
+  IAMInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      InstanceProfileName: !Ref IAMRole
+      Roles:
+        - !Ref IAMRole
+
+  EC2Instance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: "ami-0361bbf2b99f46c1d"
+      InstanceType: "t2.micro"
+      AvailabilityZone: !Sub "${AWS::Region}a"
+      Tenancy: "default"
+      SubnetId: !Ref EC2Subnet
+      EbsOptimized: false
+      SecurityGroupIds:
+        - !Ref EC2SecurityGroup
+      SourceDestCheck: true
+      BlockDeviceMappings:
+        - DeviceName: "/dev/xvda"
+          Ebs:
+            Encrypted: false
+            VolumeSize: 8
+            SnapshotId: "snap-0155f8a6b8e7aca74"
+            VolumeType: "gp3"
+            DeleteOnTermination: true
+      UserData: "IyEvYmluL2Jhc2gKc3VkbyB5dW0gLXkgaW5zdGFsbCBweXRob24zIHBpcCBnaXQKZ2l0IGNsb25lIGh0dHBzOi8vZ2l0bGFiLmNvbS9zZWFud2RjOTcvZGF0YWJyaWNrcy1hd3Mtd29ya3Nob3AuZ2l0IC9ob21lL2VjMi11c2VyL2RhdGFicmlja3MtYXdzLXdvcmtzaG9wCmJhc2ggL2hvbWUvZWMyLXVzZXIvZGF0YWJyaWNrcy1hd3Mtd29ya3Nob3AvdXNlcl9kYXRhLnNo"
+      IamInstanceProfile: !Ref IAMRole
+      Tags:
+        - Key: "Name"
+          Value: "streamlit-application-ec2"
+      HibernationOptions:
+        Configured: false
+      EnclaveOptions:
+        Enabled: false
