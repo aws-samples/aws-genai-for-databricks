@@ -1,4 +1,6 @@
-# AWS x Databricks - Generative AI Workshop
+# AWS x Databricks - Generative AI RAG Application
+
+This repository illustrates how you can build Retrieval Augmented Generation (RAG) based application using Databricks and AWS. Please follow the step-by-step instructions on the [workshop](#todo). 
 
 ## Getting started
 
