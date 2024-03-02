@@ -1,18 +1,26 @@
-# AWS x Databricks - Generative AI RAG Application
+# Zero to Generative AI using Databricks and AWS 
 
-This repository illustrates how you can build a Retrieval Augmented Generation (RAG) based application using Databricks and AWS. 
+This repository consists of a simple [Streamlit](https://streamlit.io) chatbot application. It provides the user interface for a Retrieval Augmented Generation (RAG) based generative AI application on Databricks. 
 
-To learn more, please follow the step-by-step instructions on the [workshop](#todo). 
+## Workshop
+
+To learn more, see [Zero to Generative AI with Databricks and AWS](https://catalog.workshops.aws/dare-genai-rag-databricks/en-US). 
+
+![](https://static.us-east-1.prod.workshops.aws/public/4e730f1b-bdf8-43c7-b0e7-968f85c9a189/static/aws-databricks-rag.png)
 
 ## Getting started
 
-Clone the repository into your local machine, and create a Python Virtual environment, and run the following commands
+1. Clone the repository and create a Python Virtual environment:
+
+2. Run the following commands:
 
 ```
 pip install streamlit
 pip install boto3
 python -m streamlit run app.py
 ```
+
+3. Configure your Databricks **Personal Access Token (PAT)** and **model serving endpoint URL** using the user interface.
 
 ## Security
 See CONTRIBUTING for more information.
