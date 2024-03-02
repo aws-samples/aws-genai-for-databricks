@@ -10,7 +10,7 @@ To learn more, see [Zero to Generative AI with Databricks and AWS](https://catal
 
 ## Getting started
 
-1. Clone the repository and create a Python Virtual environment:
+1. Clone the repository and create a Python Virtual environment.
 
 2. Run the following commands:
 
