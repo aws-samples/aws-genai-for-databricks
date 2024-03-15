@@ -9,4 +9,4 @@ pip install streamlit
 pip install --upgrade boto3 
 pip install --upgrade botocore 
 pip install --upgrade awscrt
-python -m streamlit run /home/ec2-user/databricks-aws-workshop/app.py --server.port 8080
+sudo python -m streamlit run /home/ec2-user/databricks-aws-workshop/app.py --server.port 8080
