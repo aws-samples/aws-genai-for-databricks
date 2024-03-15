@@ -9,6 +9,6 @@ pip install streamlit
 pip install --upgrade boto3 
 pip install --upgrade botocore 
 pip install --upgrade awscrt
-chmod 644 /home/ec2-user/databricks-aws-workshop/images/user-icon.png
-chmod 644 /home/ec2-user/databricks-aws-workshop/images/ai-icon.png
+sudo chmod 644 /home/ec2-user/databricks-aws-workshop/images/user-icon.png
+sudo chmod 644 /home/ec2-user/databricks-aws-workshop/images/ai-icon.png
 sudo /home/ec2-user/venv/bin/python -m streamlit run /home/ec2-user/databricks-aws-workshop/app.py --server.port 8080
