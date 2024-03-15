@@ -4,8 +4,10 @@ import os
 import requests
 import json
 
-USER_ICON = "images/user-icon.png"
-AI_ICON = "images/ai-icon.png"
+
+USER_ICON = os.path.dirname(os.path.abspath(
+    __file__)) + "/images/user-icon.png"
+AI_ICON = os.path.dirname(os.path.abspath(__file__)) + "/images/ai-icon.png"
 
 # HARDCODED RESPONSE
 
