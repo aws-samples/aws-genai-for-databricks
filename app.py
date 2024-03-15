@@ -29,16 +29,21 @@ def handle_input():
     formatted_user_input = {"role": "user", "content": st.session_state.input}
     st.session_state.chat_history.append(formatted_user_input)
     # print(st.session_state.chat_history)
-    response = score_model(
-        st.session_state.chat_history)
-    model_prediction = response['predictions'][0]['result']
-    model_sources = response['predictions'][0]['sources']
-    # Append to the model answers
-    st.session_state.questions.append(st.session_state.input)
-    st.session_state.answers.append(
-        {"source": model_sources, "answer": model_prediction})
-    st.session_state.chat_history.append(
-        {"role": "assistant", "content": model_prediction})
+    try:
+        response = score_model(
+            st.session_state.chat_history)
+        model_prediction = response['predictions'][0]['result']
+        model_sources = response['predictions'][0]['sources']
+        # Append to the model answers
+        st.session_state.questions.append(st.session_state.input)
+        st.session_state.answers.append(
+            {"source": model_sources, "answer": model_prediction})
+        st.session_state.chat_history.append(
+            {"role": "assistant", "content": model_prediction})
+    except Exception as e:
+        # print("There was a problem")
+        st.error(
+            "There was an issue with your request, please check your databricks credentials and model endpoint URL")
     # Reset the input field
     st.session_state.input = ""
 
@@ -81,8 +86,8 @@ def render_result(result):
     with answer:
         render_answer(result['answer'])
     with sources:
-        if 'source_documents' in result:
-            render_sources(result['source_documents'])
+        if 'source' in result:
+            render_sources(result['source'])
         else:
             render_sources([])
 
@@ -90,8 +95,7 @@ def render_result(result):
 def write_chat_message(answer):
     chat = st.container()
     with chat:
-        render_answer(answer['answer'])
-        render_sources(answer['source'])
+        render_result(answer)
 
 
 def write_user_message(md):
@@ -112,9 +116,9 @@ with st.container():
     st.write("""
              ## Application Configuration """)
     os.environ['DATABRICKS_API_TOKEN'] = st.text_input(
-        "Enter your credentials for Databricks", placeholder="e.g dapic07e3213c321890da328931434ce3a6a")
+        "Enter your credentials for Databricks", placeholder="e.g dapicXXXXXXXXXXXXXX")
     os.environ['DATABRICKS_API_URL'] = st.text_input(
-        "Enter your Databricks model endpoint URL", placeholder="e.g https://dbc-32131dadsfd.cloud.databricks.com/serving-endpoints/dare_amazon_rag_endpoint/invocations'")
+        "Enter your Databricks model endpoint URL", placeholder="e.g https://dXXXXXXXXXXXX.cloud.databricks.com/serving-endpoints/dare_amazon_rag_endpoint/invocations'")
 
 st.markdown('-----')
 st.write("""
