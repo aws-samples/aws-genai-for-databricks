@@ -4,13 +4,6 @@ import os
 import requests
 import json
 
-
-USER_ICON = os.path.dirname(os.path.abspath(
-    __file__)) + "/images/user-icon.png"
-AI_ICON = os.path.dirname(os.path.abspath(__file__)) + "/images/ai-icon.png"
-
-# HARDCODED RESPONSE
-
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
 
@@ -20,39 +13,8 @@ if "questions" not in st.session_state:
 if "answers" not in st.session_state:
     st.session_state.answers = []
 
-if "input" not in st.session_state:
-    st.session_state.input = ""
-
-if "files" not in st.session_state:
-    st.session_state.files = []
-
-
-def handle_input():
-    formatted_user_input = {"role": "user", "content": st.session_state.input}
-    st.session_state.chat_history.append(formatted_user_input)
-    # print(st.session_state.chat_history)
-    try:
-        response = score_model(
-            st.session_state.chat_history)
-        model_prediction = response['predictions'][0]['result']
-        model_sources = response['predictions'][0]['sources']
-        # Append to the model answers
-        st.session_state.questions.append(st.session_state.input)
-        st.session_state.answers.append(
-            {"source": model_sources, "answer": model_prediction})
-        st.session_state.chat_history.append(
-            {"role": "assistant", "content": model_prediction})
-    except Exception as e:
-        # print("There was a problem")
-        st.error(
-            "There was an issue with your request, please check your databricks credentials and model endpoint URL")
-    # Reset the input field
-    st.session_state.input = ""
-
-
 def create_tf_serving_json(data):
     return {'columns': ["messages"], "data": [[{"messages": data}]]}
-
 
 def score_model(dataset):
     headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_API_TOKEN")}',
@@ -66,76 +28,65 @@ def score_model(dataset):
             f'Request failed with status {response.status_code}, {"Refresh our Application and try again"}')
     return response.json()
 
-
-def render_answer(answer):
-    col1, col2 = st.columns([1, 12])
-    with col1:
-        st.image(AI_ICON, use_column_width='always')
-    with col2:
-        st.info(answer)
-
-
 def render_sources(sources):
-    col1, col2 = st.columns([1, 12])
-    with col2:
-        with st.expander("Sources"):
-            for s in sources:
-                st.write(s)
+    with st.expander(label="Sources"):
+        for s in sources:
+            st.markdown(s)
 
-
-def render_result(result):
-    answer, sources = st.tabs(['Answer', 'Sources'])
-    with answer:
-        render_answer(result['answer'])
-    with sources:
+def write_answer_with_source(result):
+    with st.chat_message("assistant"):
+        st.write(result['answer'])
         if 'source' in result:
             render_sources(result['source'])
         else:
             render_sources([])
 
+def write_question(question):
+    with st.chat_message("user"):
+        st.write(question)
 
-def write_chat_message(answer):
-    chat = st.container()
-    with chat:
-        render_result(answer)
+st.set_page_config(
+    page_title="Zero to generative AI",
+    page_icon=":rocket:"
+)
 
+# Title UI
+st.title(":rocket: Zero to generative AI")
+st.write("Demo chatbot application. To learn more, see [aws-samples/aws-genai-for-databricks](https://github.com/aws-samples/aws-genai-for-databricks)")
 
-def write_user_message(md):
-    col1, col2 = st.columns([1, 12])
-    with col1:
-        st.image(USER_ICON, use_column_width='always')
-    with col2:
-        st.warning(md)
-
-
-with st.container():
-    st.write("""
-         # AWS RAG Application with Databricks Model Serving      
-         """)
-st.markdown('-----')
-
-with st.container():
-    st.write("""
-             ## Application Configuration """)
+# Configuration UI
+with st.expander(label="⚙️ Configuration", expanded=True):
     os.environ['DATABRICKS_API_TOKEN'] = st.text_input(
-        "Enter your credentials for Databricks", placeholder="e.g dapicXXXXXXXXXXXXXX")
+        "Enter your Databricks personal access token", key="DATABRICKS_API_TOKEN", placeholder="dapiXXXXXXXXXXXXXX")
     os.environ['DATABRICKS_API_URL'] = st.text_input(
-        "Enter your Databricks model endpoint URL", placeholder="e.g https://dXXXXXXXXXXXX.cloud.databricks.com/serving-endpoints/dare_amazon_rag_endpoint/invocations'")
+        "Enter your Databricks model endpoint URL", key="DATABRICKS_API_URL", placeholder="https://XXXXX.cloud.databricks.com/serving-endpoints/serving-endpoints/catalog_XXXXX_default_endpoint/invocations")
 
-st.markdown('-----')
-st.write("""
-         ## Test out your Databricks LLM""")
-with st.form('my_form'):
-    input_text = st.text_input("You are talking to your Databricks LLM, ask any question.",
-                               key="input", placeholder="Ask a question")
-    submit_button = st.form_submit_button(
-        label='Submit', on_click=handle_input)
-st.markdown('-----')
+st.divider()
 
-with st.container():
-    num_questions_asked = len(st.session_state.answers)
-    for i in range(num_questions_asked):
-        write_user_message(
-            st.session_state.questions[num_questions_asked - i - 1])
-        write_chat_message(
-            st.session_state.answers[num_questions_asked - i - 1])
+# Chat messages UI
+number_of_questions = len(st.session_state.questions)
+
+for i in range(number_of_questions):
+    write_question(st.session_state.questions[i])
+    write_answer_with_source(st.session_state.answers[i]) 
+
+# Chat input UI
+with st.spinner("Loading..."):
+    if question := st.chat_input("Type something here..."):
+        try:
+            # Append question to chat history
+            st.session_state.chat_history.append({"role": "user", "content": question})
+            # Call model
+            response = score_model(st.session_state.chat_history)
+            answer = response['predictions'][0]['result']
+            source = response['predictions'][0]['sources']
+            # Append to the session state
+            answer_with_source = {"answer": answer, "source": source}
+            st.session_state.questions.append(question)
+            st.session_state.answers.append(answer_with_source)
+            st.session_state.chat_history.append({"role": "assistant", "content": answer})
+            # Render answers to UI
+            write_question(question)
+            write_answer_with_source(answer_with_source)
+        except Exception as e:
+            st.error("Error: Please check your databricks credentials and model endpoint URL.", icon="🚨")
