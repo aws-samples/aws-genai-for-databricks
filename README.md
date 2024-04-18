@@ -2,11 +2,13 @@
 
 This repository consists of a simple [Streamlit](https://streamlit.io) chatbot application. It provides the user interface for a Retrieval Augmented Generation (RAG) based generative AI application on Databricks. 
 
+## Try it
+
+We deployed a test chat application to: https://zero-to-generative-ai.streamlit.app/ 
+
 ## Workshop
 
 To learn more, see [Zero to Generative AI with Databricks and AWS](https://catalog.workshops.aws/dare-genai-rag-databricks/en-US). 
-
-![](https://static.us-east-1.prod.workshops.aws/public/4e730f1b-bdf8-43c7-b0e7-968f85c9a189/static/aws-databricks-rag.png)
 
 ## Getting started
 
