@@ -13,16 +13,19 @@ if "answers" not in st.session_state:
     st.session_state.answers = []
 
 def create_tf_serving_json(data):
-    return {'columns': ["messages"], "data": [[{"messages": data}]]}
+    return {'messages': data}
+    # return {'columns': ["messages"], "data": [[{"messages": data}]]}
 
 def score_model(dataset):
     headers = {'Authorization': f'Bearer {os.environ.get("DATABRICKS_API_TOKEN")}',
                'Content-Type': 'application/json'}
-    ds_dict = {"dataframe_split": create_tf_serving_json(dataset)}
+    # ds_dict = {"dataframe_split": create_tf_serving_json(dataset)}
+    ds_dict = create_tf_serving_json(dataset)
     data_json = json.dumps(ds_dict, allow_nan=True)
     response = requests.request(
         method='POST', headers=headers, url=os.environ.get("DATABRICKS_API_URL"), data=data_json)
     if response.status_code != 200:
+        # print(response.text)
         raise Exception(
             f'Request failed with status {response.status_code}, {"Refresh our Application and try again"}')
     return response.json()
@@ -75,10 +78,11 @@ with st.spinner("Loading..."):
         try:
             # Append question to chat history
             st.session_state.chat_history.append({"role": "user", "content": question})
+            print(st.session_state.chat_history)
             # Call model
             response = score_model(st.session_state.chat_history)
-            answer = response['predictions'][0]['result']
-            source = response['predictions'][0]['sources']
+            answer = response[0]['result']
+            source = response[0]['sources']
             # Append to the session state
             answer_with_source = {"answer": answer, "source": source}
             st.session_state.questions.append(question)
@@ -89,3 +93,4 @@ with st.spinner("Loading..."):
             write_answer_with_source(answer_with_source)
         except Exception as e:
             st.error("Error: Please check your databricks credentials and model endpoint URL.", icon="🚨")
+            # print(e)
